@@ -5,9 +5,9 @@ These are some of the Projects I worked on for my courses in my Master's program
                            Cricket analytics is essential in the modern game, helping teams make data-driven decisions to improve performance and win matches.
                            Statistical analysis and data visualizations to analyze player performance and select the best team composition.
 
-                           Web Scraping Tool: MS Power Automate
-                           Programming language used for data cleaning, and wrangling: Python
-                           Data Visualization Tool: Tableau --> https://public.tableau.com/app/profile/aakarsh.sagar/viz/IPLAnalytics_16854181898210/Batsman
+   Web Scraping Tool: MS Power Automate
+   Programming language used for data cleaning, and wrangling: Python
+   Data Visualization Tool: Tableau --> https://public.tableau.com/app/profile/aakarsh.sagar/viz/IPLAnalytics_16854181898210/Batsman
 
 2. **Product Recommendation**: A project that explores the concept of analyzing user data and behaviors to provide personalized suggestions for products or services.
                            For small businesses, product recommendation systems can be particularly beneficial. 
