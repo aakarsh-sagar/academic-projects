@@ -22,7 +22,7 @@ These are some of the Projects I worked on for my courses in my Master's program
                         
                           Programming language: R
 
-4. **Credit Card Fraud Detection using XGBoost**: 
+3. **Credit Card Fraud Detection using XGBoost**: 
                           ●	Developed a machine learning model using XGBoost Algorithm to predict fraudulent transactions on an imbalanced dataset with an accuracy of 99.96%.
                           ●	Optimized model performance by tuning hyper-parameters using cross-validation techniques.
                           ●	Evaluated the model performance using key metrics such as precision-recall, F1-score, and AUC-ROC.
