@@ -1,0 +1,208 @@
+---
+title: "Mini-Project-CCFD"
+author: "Aakarsh Sagar & Ajay Rawtani"
+date: '`r Sys.Date()`'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Libraries required
+
+```{r}
+#Loading Relevant Libraries
+library(caret)
+library(rpart)
+library(dplyr)
+library(ROSE)
+library(randomForest)
+library(rpart.plot)
+library(xgboost)
+library(caTools)
+library(ggplot2)
+```
+
+# Dataset
+
+```{r}
+# Read the CSV Data File
+dat <- read.csv("creditcard.csv")
+```
+
+```{r}
+#Overview of DataSet
+#View the Headers
+names(dat)
+
+#View Structure of Data
+str(dat)
+
+#Print of sample set (Top 6 rows)
+head(dat)
+
+#Learn some more about the data
+summary(dat)
+summary(dat$Amount)
+IQR(dat$Amount)
+sd(dat$Amount)
+var(dat$Amount)
+
+```
+
+```{r}
+#Convert Class Column to a factor/Category {0 - no fraud; 1- fraud}
+dat$Class = as.factor(dat$Class)
+
+summary(dat$Class)
+str(dat)
+head(dat)
+```
+
+```{r}
+# --------- PIE CHART for comparing no.of frauds and non-frauds ------------
+labels = c("No Fraud","Fraud")
+labels = paste(labels,round(prop.table(table(dat$Class))*100,2))
+labels = paste(labels,"%")
+pie(table(dat$Class),labels,col = c("#AB9968", "#BA0C2F"), main = "Overall Credit Card Transactions")
+```
+
+# Training and Testing set
+
+```{r}
+# Data split
+#Check with Aakarsh on the other code (which is simpler)
+set.seed(123456)
+
+sample_data <- sample.split(dat$Class,SplitRatio = 0.80)
+dat.train <- subset(dat, sample_data == TRUE)
+dat.test <- subset(dat, sample_data == FALSE, select = -Class)
+dat.testc <- subset(dat, sample_data == FALSE, select = Class)
+
+dat.testc = as.data.frame(dat.testc)
+colnames(dat.testc)[1] = c("Class")
+
+# --------- PIE CHART for comparing no.of training and test ------------
+train_count <- nrow(dat.train)#change to dat.train
+test_count <- nrow(dat.test)#change to dat.test
+
+train_percent <- round(train_count / (train_count + test_count) * 100, 1)
+test_percent <- round(test_count / (train_count + test_count) * 100, 1)
+
+df <- data.frame(
+  dataset = c("Testing", "Training"),
+  count = c(test_count, train_count),
+  percent = c(test_percent, train_percent)
+ )
+colors <- c("#AB9968", "#BA0C2F")
+labels <- paste0(df$dataset, " (", df$percent, "%)")
+
+ggplot(df, aes(x = "", y = count, fill = dataset)) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar(theta = "y") +
+  scale_fill_manual(values = colors, labels = labels) +
+  labs(title = "Count of Observations in Training and Testing Data Sets") +
+  theme_void()
+```
+
+# XGBoost
+
+```{r}
+# ----------------------- XGBOOST ALGORITHM --------------------------------
+labels <- dat.train$Class
+y <- recode(labels, '0' = 0, "1" = 1)
+xgb <- xgboost(data = data.matrix(dat.train[,-31]), 
+               label = y,
+               eta = 0.3,
+               gamma = 0.5,
+               max_depth = 6, 
+               nrounds = 300, 
+               objective = "binary:logistic",
+               colsample_bytree = 0.8,
+               verbose = 0,
+               set.seed(1234)
+)
+xgb_pred <- predict(xgb, data.matrix(dat.test))
+
+dat.testc$Pred = 0L
+dat.testc$Pred[xgb_pred>0.5] = 1L
+dat.testc$Pred = factor(dat.testc$Pred)
+
+confusionMatrix(dat.testc$Pred,dat.testc$Class)
+
+roc.curve(dat.testc$Class,dat.testc$Pred,plotit = TRUE,
+          col="#BA0C2F",main = "ROC curve for XGBoost Algorithm",
+          col.main="#AB9968")
+
+```
+
+```{r}
+#Top contributing variables
+xgb.plot.shap(data = data.matrix(dat.train[,-31]),
+                                 model = xgb,
+                                 top_n = 5)
+```
+
+```{r}
+xgb.plot.shap.summary(data = data.matrix(dat.train[,-31]),
+                                 model = xgb, top_n = 30)
+```
+
+# Logistic regression
+
+```{r}
+# ----------------------- LOGISTIC REGRESSION ------------------------------
+glm_fit <- glm(Class ~ ., data = dat.train, family = 'binomial')
+pred_glm <- predict(glm_fit,dat.test, type = 'response')
+
+dat.testc$Pred = 0L
+dat.testc$Pred[pred_glm>0.5] = 1L
+dat.testc$Pred = factor(dat.testc$Pred)
+
+confusionMatrix(dat.testc$Pred,dat.testc$Class)
+
+roc.curve(dat.testc$Class,dat.testc$Pred,plotit = TRUE, col="#D6604D",main = "ROC curve for Logistic Regression Algorithm", col.main="#B2182B")
+```
+
+```{r}
+summary(glm_fit)
+```
+
+# Citations
+
+## Calculations and Formulas
+
+1.  [Interpretation of SHAP values](https://m.mage.ai/how-to-interpret-and-explain-your-machine-learning-models-using-shap-values-471c2635b78e)
+
+2.  [Interpretation of SHAP values alternate](https://blog.datascienceheroes.com/how-to-interpret-shap-values-in-r/)
+
+3.  [XGBoost Mathematics Explained](https://dimleve.medium.com/xgboost-mathematics-explained-58262530904a)
+
+4.  [XGBoost: A Scalable Tree Boosting System](https://arxiv.org/pdf/1603.02754.pdf)
+
+5.  [XGBoost Documentation](https://xgboost.readthedocs.io/en/latest/index.html)
+
+6.  [Interrater reliability: the kappa statistic](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3900052/#:~:text=Cohen%20suggested%20the%20Kappa%20result,1.00%20as%20almost%20perfect%20agreement)
+
+## Dataset
+
+7.  <https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud>
+
+-   [Andrea Dal Pozzolo, Olivier Caelen, Reid A. Johnson and Gianluca Bontempi. Calibrating Probability with Undersampling for Unbalanced Classification. In Symposium on Computational Intelligence and Data Mining (CIDM), IEEE, 2015](https://www.researchgate.net/publication/283349138_Calibrating_Probability_with_Undersampling_for_Unbalanced_Classification)
+
+-   [Dal Pozzolo, Andrea; Caelen, Olivier; Le Borgne, Yann-Ael; Waterschoot, Serge; Bontempi, Gianluca. Learned lessons in credit card fraud detection from a practitioner perspective, Expert systems with applications,41,10,4915-4928,2014, Pergamon](https://www.researchgate.net/publication/260837261_Learned_lessons_in_credit_card_fraud_detection_from_a_practitioner_perspective)
+
+-   [Dal Pozzolo, Andrea; Boracchi, Giacomo; Caelen, Olivier; Alippi, Cesare; Bontempi, Gianluca. Credit card fraud detection: a realistic modeling and a novel learning strategy, IEEE transactions on neural networks and learning systems,29,8,3784-3797,2018,IEEE](https://www.researchgate.net/publication/260837261_Learned_lessons_in_credit_card_fraud_detection_from_a_practitioner_perspective)
+
+-   [Dal Pozzolo, Andrea Adaptive Machine learning for credit card fraud detection ULB MLG PhD thesis (supervised by G. Bontempi)](http://di.ulb.ac.be/map/adalpozz/pdf/Dalpozzolo2015PhD.pdf)
+
+-   [Carcillo, Fabrizio; Dal Pozzolo, Andrea; Le Borgne, Yann-Aël; Caelen, Olivier; Mazzer, Yannis; Bontempi, Gianluca. Scarff: a scalable framework for streaming credit card fraud detection with Spark, Information fusion,41, 182-194,2018,Elsevier](https://www.researchgate.net/publication/319616537_SCARFF_a_Scalable_Framework_for_Streaming_Credit_Card_Fraud_Detection_with_Spark)
+
+-   [Bertrand Lebichot, Yann-Aël Le Borgne, Liyun He, Frederic Oblé, Gianluca Bontempi Deep-Learning Domain Adaptation Techniques for Credit Cards Fraud Detection, INNSBDDL 2019: Recent Advances in Big Data and Deep Learning, pp 78-88, 2019](https://www.researchgate.net/publication/332180999_Deep-Learning_Domain_Adaptation_Techniques_for_Credit_Cards_Fraud_Detection)
+
+-   [Fabrizio Carcillo, Yann-Aël Le Borgne, Olivier Caelen, Frederic Oblé, Gianluca Bontempi Combining Unsupervised and Supervised Learning in Credit Card Fraud Detection Information Sciences, 2019](https://www.researchgate.net/publication/333143698_Combining_Unsupervised_and_Supervised_Learning_in_Credit_Card_Fraud_Detection)
+
+-   [Yann-Aël Le Borgne, Gianluca Bontempi Reproducible machine Learning for Credit Card Fraud Detection - Practical Handbook](https://www.researchgate.net/publication/351283764_Machine_Learning_for_Credit_Card_Fraud_Detection_-_Practical_Handbook)
+
+-   [Bertrand Lebichot, Gianmarco Paldino, Wissam Siblini, Liyun He, Frederic Oblé, Gianluca Bontempi Incremental learning strategies for credit cards fraud detection, IInternational Journal of Data Science and Analytics](https://www.researchgate.net/publication/352275169_Incremental_learning_strategies_for_credit_cards_fraud_detection)
