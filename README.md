@@ -19,9 +19,9 @@ https://public.tableau.com/app/profile/aakarsh.sagar/viz/IPLAnalytics_1685418189
                            Additionally, these systems allow small businesses to make data-driven decisions by gathering insights into customer preferences and market trends. This information can be used to optimize product offerings, marketing strategies, and inventory management, leading to improved operational efficiency and profitability.
 
 **Conclusion**: 
-                          ● Performed exploratory data analysis, visualizing top-selling products and identifying seasonal order and revenue trends.
-                          ● Analyzed customer behavior, highlighting the importance of a customer retention strategy due to a majority of one-time purchasers.
-                          ● Utilized cosine similarity for personalized recommendations, enhancing the relevance and diversity of suggested items based on user and item similarity.
+● Performed exploratory data analysis, visualizing top-selling products and identifying seasonal order and revenue trends.
+● Analyzed customer behavior, highlighting the importance of a customer retention strategy due to a majority of one-time purchasers.
+● Utilized cosine similarity for personalized recommendations, enhancing the relevance and diversity of suggested items based on user and item similarity.
                         
                           Programming language: R
 
