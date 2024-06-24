@@ -10,3 +10,8 @@ This demo is of a POC application hosted on Streamlit(localhost), shows the inte
 ## Languages and frameworks used:
 <br> Language and frameworks: Python (Langchain)
 <br> web application: Streamlit
+
+
+
+https://github.com/aakarsh-sagar/academic-projects/assets/159864318/139df1e9-0bf2-431e-ab91-e238bdfb4b81
+
